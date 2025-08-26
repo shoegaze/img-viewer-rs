@@ -1,6 +1,7 @@
 mod app;
 mod cli;
 mod gfx;
+mod window;
 
 use clap::Parser;
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -16,7 +17,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse().validated()?;
     let mut app = App::default();
 
-    open_image_from_path(&mut app, args.path)?;
+    for path in args.paths {
+        let Err(error) = open_image_from_path(&mut app, path) else {
+            continue;
+        };
+
+        eprintln!("Couldn't open image: '{}'", error);
+    }
 
     // Execute app
     let event_loop = EventLoop::new().unwrap();
@@ -32,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn open_image_from_path(app: &mut App, path: PathBuf) -> Result<(), Box<dyn Error>> {
     let canonical_path = to_canonical_path(&path)?;
 
-    app.open_image(canonical_path)?;
+    app.queue_open_image(canonical_path)?;
 
     Ok(())
 }

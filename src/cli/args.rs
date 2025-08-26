@@ -8,31 +8,45 @@ static VALID_FILE_EXTENSIONS: [&str; 1] = ["png"];
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    pub path: PathBuf,
+    #[arg(
+        value_name = "FILES",
+        value_parser = clap::value_parser!(PathBuf),
+        value_hint = clap::ValueHint::FilePath
+    )]
+    pub paths: Vec<PathBuf>,
 }
 
 impl Args {
     pub fn validated(self) -> Result<Self, Box<dyn Error>> {
-        if !self.valid_path() {
-            return Err(Box::from("Invalid image path"));
+        let mut valid_paths: Vec<PathBuf> = vec![];
+
+        for path in self.paths {
+            let is_valid_path = validate_path(&path);
+
+            if !is_valid_path {
+                eprintln!("Path is not a supported image: '{}'", path.display());
+                continue;
+            }
+
+            valid_paths.push(path);
         }
 
-        Ok(self)
+        let validated_args = Args { paths: valid_paths };
+
+        Ok(validated_args)
+    }
+}
+
+fn validate_path(path: &PathBuf) -> bool {
+    if path.is_dir() {
+        return true;
     }
 
-    fn valid_path(&self) -> bool {
-        let path = &self.path;
+    if path.is_file() {
+        let extension = path.extension().unwrap();
 
-        if path.is_dir() {
-            return true;
-        }
-
-        if path.is_file() {
-            let extension = path.extension().unwrap();
-
-            return VALID_FILE_EXTENSIONS.iter().any(|&ext| extension == ext);
-        }
-
-        false
+        return VALID_FILE_EXTENSIONS.iter().any(|&ext| extension == ext);
     }
+
+    false
 }

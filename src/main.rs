@@ -1,20 +1,25 @@
 mod app;
+mod cli;
 mod gfx;
 
+use clap::Parser;
 use winit::event_loop::{ControlFlow, EventLoop};
 
 use std::env;
+use std::error::Error;
 use std::path::PathBuf;
 
 use app::App;
+use cli::args::Args;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
+    let args = Args::parse().validated()?;
+
     let mut app = App::default();
     let event_loop = EventLoop::new().unwrap();
 
     {
-        // DEBUG: Load test image
-        let image_path = PathBuf::from("test.png");
+        let image_path = args.path;
 
         let current_dir = env::current_dir()?;
         let full_path: PathBuf = [current_dir, image_path].iter().collect();

@@ -8,7 +8,7 @@ use winit::application::ApplicationHandler;
 use winit::dpi::PhysicalSize;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
-use winit::keyboard::KeyCode::Tab;
+use winit::keyboard::KeyCode::{Backspace, Delete, Tab};
 use winit::window::{Window, WindowAttributes, WindowId};
 
 use std::collections::VecDeque;
@@ -244,6 +244,11 @@ impl ApplicationHandler for App {
 
                 // TODO: Replace with event.logical_key
                 let key = event.physical_key;
+
+                if key == Delete || key == Backspace {
+                    self.close_window_from_id(event_loop, window_id);
+                    return;
+                }
 
                 let mut updated_config = self.config.clone();
 

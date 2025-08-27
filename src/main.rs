@@ -1,5 +1,6 @@
 mod app;
 mod cli;
+mod config;
 mod gfx;
 mod window;
 
@@ -10,12 +11,15 @@ use std::env;
 use std::error::Error;
 use std::path::PathBuf;
 
-use app::App;
-use cli::args::Args;
+use crate::app::App;
+use crate::cli::args::Args;
+use crate::config::AppConfig;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse().validated()?;
-    let mut app = App::default();
+
+    let config = AppConfig::default();
+    let mut app = App::from_config(config);
 
     for path in args.paths {
         let Err(error) = open_image_from_path(&mut app, path) else {

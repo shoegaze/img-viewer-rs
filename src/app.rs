@@ -9,14 +9,14 @@ use winit::dpi::PhysicalSize;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::KeyCode::{Backspace, Delete, Tab};
-use winit::window::{Window, WindowAttributes, WindowId};
+use winit::window::WindowId;
 
 use std::collections::VecDeque;
-use std::env;
 use std::error::Error;
 use std::path::PathBuf;
 
 use crate::config::AppConfig;
+use crate::util::{initial_window_attributes, window_title};
 use crate::window::image_data::{ImageData, ImageMeta};
 use crate::window::image_window::ImageWindow;
 use crate::window::window_handle::WindowHandle;
@@ -37,7 +37,7 @@ impl App {
         app
     }
 
-    pub fn queue_open_image(&mut self, image_path: PathBuf) -> Result<(), Box<dyn Error>> {
+    pub fn queue_image_open(&mut self, image_path: PathBuf) -> Result<(), Box<dyn Error>> {
         {
             let is_path_in_queued = self
                 .queued
@@ -71,25 +71,15 @@ impl App {
         Ok(())
     }
 
-    fn render_all(&self) -> Result<(), Box<dyn Error>> {
-        for window in &self.image_windows {
-            window.render()?;
-        }
-
-        Ok(())
-    }
-
     fn create_window(
         &mut self,
         event_loop: &ActiveEventLoop,
         image: DynamicImage,
         image_data: ImageData,
     ) -> Result<(), Box<dyn Error>> {
-        let (width, height) = image_data.meta.dimensions();
-        let title = self.title_from_image_path(&image_data);
-
-        let attributes =
-            self.initial_window_attributes(title.as_str(), PhysicalSize::new(width, height));
+        let title = window_title(&image_data);
+        let size = PhysicalSize::from(image_data.meta);
+        let attributes = initial_window_attributes(title.as_str(), size);
 
         let (window, display) = glutin::SimpleWindowBuilder::new()
             .set_window_builder(attributes)
@@ -97,53 +87,11 @@ impl App {
 
         let texture = self.create_texture(&display, &image)?;
         let window_handle = WindowHandle::new(window, display);
-
         let image_window = ImageWindow::new(window_handle, image_data, texture);
 
         self.image_windows.push(image_window);
 
         Ok(())
-    }
-
-    fn get_window(&self, window_id: WindowId) -> Option<&ImageWindow> {
-        self.image_windows
-            .iter()
-            .find(|&image_window| image_window.inner_window().id() == window_id)
-    }
-
-    fn close_window_from_id(&mut self, event_loop: &ActiveEventLoop, window_id: WindowId) {
-        if self.image_windows.is_empty() {
-            return;
-        }
-
-        // Quit application if the last image is closed
-        // TODO?: Check if window_id matches image_windows[0]...id()
-        if self.image_windows.len() == 1 {
-            event_loop.exit();
-        }
-
-        let close_window_index = self
-            .image_windows
-            .iter()
-            .map(|image_window| image_window.inner_window())
-            .position(|inner_window| inner_window.id() == window_id)
-            .unwrap();
-
-        self.image_windows.remove(close_window_index);
-    }
-
-    fn initial_window_attributes(
-        &self,
-        title: &str,
-        inner_size: PhysicalSize<u32>,
-    ) -> WindowAttributes {
-        // Set visible to false and wait until image is ready to be rendered:
-        //  https://docs.rs/winit/latest/winit/#drawing-on-the-window
-        Window::default_attributes()
-            .with_transparent(false)
-            .with_title(title)
-            .with_visible(false)
-            .with_inner_size(inner_size)
     }
 
     fn create_texture(
@@ -161,18 +109,60 @@ impl App {
         Ok(texture)
     }
 
-    fn title_from_image_path(&self, image_data: &ImageData) -> String {
-        let image_file_name = image_data.path.file_name().unwrap();
-
-        format!("{}: {}", env!("CARGO_PKG_NAME"), image_file_name.display())
+    fn get_window(&self, window_id: WindowId) -> Option<&ImageWindow> {
+        self.image_windows
+            .iter()
+            .find(|&image_window| image_window.inner_window().id() == window_id)
     }
 
+    fn close_window_from_id(&mut self, event_loop: &ActiveEventLoop, window_id: WindowId) {
+        if self.image_windows.is_empty() {
+            return;
+        }
+
+        // Quit application if the last image is closed
+        if self.image_windows.len() == 1 {
+            event_loop.exit();
+        }
+
+        // TODO: Refactor this => `self.remove_image_window(&self, window_id: WindowId)`
+        let close_window_index = self
+            .image_windows
+            .iter()
+            .map(|image_window| image_window.inner_window())
+            .position(|inner_window| inner_window.id() == window_id)
+            .unwrap();
+
+        self.image_windows.remove(close_window_index);
+
+        self.reset_focus()
+    }
+
+    /// Apply all configs that may have been updated
     fn apply_config(&mut self) {
         for image_window in &self.image_windows {
             let inner_window = image_window.inner_window();
 
             inner_window.set_decorations(self.config.show_title);
         }
+    }
+
+    /// Resets focus to the top window
+    fn reset_focus(&self) {
+        let Some(image_window) = self.image_windows.first() else {
+            return;
+        };
+
+        image_window.inner_window().focus_window();
+    }
+
+    /// Render all image windows
+    fn render_all(&self) -> Result<(), Box<dyn Error>> {
+        for window in &self.image_windows {
+            window.render()?;
+        }
+
+        Ok(())
     }
 }
 
@@ -202,18 +192,16 @@ impl ApplicationHandler for App {
 
                 for image_window in &self.image_windows {
                     let inner_window = image_window.inner_window();
-                    let image_data = image_window.image_data();
 
                     {
-                        // Apply window transforms
-                        let (width, height) = image_data.meta.dimensions();
-                        let size = PhysicalSize::new(width, height);
-                        inner_window.set_min_inner_size(Some(size));
-                        inner_window.set_max_inner_size(Some(size));
+                        // TODO: Apply window transforms
                     }
 
                     match inner_window.is_visible() {
-                        Some(false) => inner_window.set_visible(true),
+                        Some(false) => {
+                            inner_window.set_visible(true);
+                            inner_window.focus_window();
+                        }
                         _ => (),
                     }
 

@@ -1,3 +1,5 @@
+use winit::dpi::PhysicalSize;
+
 use std::path::PathBuf;
 
 #[derive(Default, Copy, Clone)]
@@ -13,6 +15,14 @@ impl ImageMeta {
 
     pub fn dimensions(&self) -> (u32, u32) {
         (self.width, self.height)
+    }
+}
+
+impl From<ImageMeta> for PhysicalSize<u32> {
+    fn from(value: ImageMeta) -> Self {
+        let (width, height) = value.dimensions();
+
+        PhysicalSize::new(width, height)
     }
 }
 

@@ -39,6 +39,7 @@ impl Args {
 
 fn validate_path(path: &PathBuf) -> bool {
     if path.is_dir() {
+        // TODO: Recursively check files in dir
         return true;
     }
 

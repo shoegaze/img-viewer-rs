@@ -2,6 +2,7 @@ mod app;
 mod cli;
 mod config;
 mod gfx;
+mod util;
 mod window;
 
 use clap::Parser;
@@ -43,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn open_image_from_path(app: &mut App, path: PathBuf) -> Result<(), Box<dyn Error>> {
     let canonical_path = to_canonical_path(&path)?;
 
-    app.queue_open_image(canonical_path)?;
+    app.queue_image_open(canonical_path)?;
 
     Ok(())
 }

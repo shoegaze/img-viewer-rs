@@ -33,10 +33,6 @@ impl ImageWindow {
         Ok(())
     }
 
-    pub fn image_data(&self) -> &ImageData {
-        &self.image_data
-    }
-
     pub fn inner_window(&self) -> &Window {
         &self.window_handle.window
     }

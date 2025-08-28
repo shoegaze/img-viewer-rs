@@ -73,8 +73,9 @@ impl App {
 
         let image = ImageReader::open(&image_path)?;
         let decoded_image = image.decode()?;
+        let (width, height) = decoded_image.dimensions();
 
-        let image_meta = ImageMeta::new(decoded_image.width(), decoded_image.height());
+        let image_meta = ImageMeta::new(width, height);
         let image_data = ImageData::new(image_path, image_meta);
 
         self.images_queue.push_back((decoded_image, image_data));
@@ -326,6 +327,16 @@ impl ApplicationHandler for App {
                 for image_window in &self.image_windows {
                     image_window.request_redraw();
                 }
+            }
+
+            WindowEvent::Resized(_size) => {
+                let Some(focus_window) = self.get_focused_window() else {
+                    return;
+                };
+
+                let _ = focus_window.render();
+
+                focus_window.request_redraw();
             }
 
             WindowEvent::CursorMoved { position, .. } => {

@@ -3,7 +3,10 @@ use clap::Parser;
 use std::error::Error;
 use std::path::PathBuf;
 
-static VALID_FILE_EXTENSIONS: [&str; 1] = ["png"];
+// See image-rs supported file extensions:
+//  https://github.com/image-rs/image?tab=readme-ov-file#supported-image-formats
+static SUPPORTED_FILE_EXTENSIONS: [&str; 8] =
+    ["bmp", "gif", "jpg", "jpeg", "png", "tga", "tiff", "webp"];
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -44,9 +47,17 @@ fn validate_path(path: &PathBuf) -> bool {
     }
 
     if path.is_file() {
-        let extension = path.extension().unwrap();
+        let Some(extension) = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.to_string().to_lowercase())
+        else {
+            return false;
+        };
 
-        return VALID_FILE_EXTENSIONS.iter().any(|&ext| extension == ext);
+        return SUPPORTED_FILE_EXTENSIONS
+            .iter()
+            .any(|&ext| extension == ext);
     }
 
     false

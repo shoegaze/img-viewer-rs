@@ -1,7 +1,8 @@
 mod app;
 mod cli;
-mod config;
 mod gfx;
+mod settings;
+mod ui;
 mod util;
 mod window;
 
@@ -14,13 +15,13 @@ use std::path::PathBuf;
 
 use crate::app::App;
 use crate::cli::args::Args;
-use crate::config::AppConfig;
+use crate::settings::AppSettings;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse().validated()?;
 
-    let config = AppConfig::default();
-    let mut app = App::from_config(config);
+    let settings = AppSettings::default();
+    let mut app = App::from_settings(settings);
 
     for path in args.paths {
         let Err(error) = open_image_from_path(&mut app, path) else {

@@ -3,7 +3,13 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/_server/img-viewer-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/app-driver/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/app-main/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/_server/img-viewer-server/target" />
+      <excludeFolder url="file://$MODULE_DIR$/app-driver/target" />
+      <excludeFolder url="file://$MODULE_DIR$/app-main/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

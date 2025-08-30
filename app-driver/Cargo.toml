@@ -1,0 +1,10 @@
+[package]
+name = "app-driver"
+description = "Lightweight driver-controller for the main app"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "app-driver"
+path = "src/main.rs"
+test = true

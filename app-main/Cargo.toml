@@ -1,0 +1,16 @@
+[package]
+name = "app-main"
+description = "Main image view app, manages windows, images, and UI."
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+clap = { version = "4.5.45", features = ["derive"] }
+glium = "0.36.0"
+image = "0.25.6"
+winit = "0.30.12"
+
+[[bin]]
+name = "app-main"
+path = "src/main.rs"
+test = true

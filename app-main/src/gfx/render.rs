@@ -6,8 +6,8 @@ use std::error::Error;
 
 use crate::gfx::vertex::SCREEN_VERTS;
 
-static IMAGE_VERT_SHADER: &str = include_str!("../../resources/shaders/image_vert.glsl");
-static IMAGE_FRAG_SHADER: &str = include_str!("../../resources/shaders/image_frag.glsl");
+static IMAGE_VERT_SHADER: &str = include_str!("../../../resources/shaders/image_vert.glsl");
+static IMAGE_FRAG_SHADER: &str = include_str!("../../../resources/shaders/image_frag.glsl");
 
 pub fn render_image(
     display: &Display<WindowSurface>,

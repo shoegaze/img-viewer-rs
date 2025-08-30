@@ -20,6 +20,7 @@ use crate::settings::AppSettings;
 use crate::ui::AppUi;
 use crate::util::coordinates::Coordinates;
 use crate::util::window::{initial_window_attributes, window_title};
+use crate::window::event::double_click_context::DoubleClickContext;
 use crate::window::event::drag_context::DragContext;
 use crate::window::image_data::{ImageData, ImageMeta};
 use crate::window::image_window::ImageWindow;
@@ -36,6 +37,7 @@ pub struct App {
 
     // Event contexts
     absolute_cursor_coords: Coordinates,
+    double_click_context: DoubleClickContext,
     drag_context: Option<DragContext>,
 }
 
@@ -281,6 +283,14 @@ impl AppUi for App {
         };
     }
 
+    fn ui_update_double_click_context(&mut self, window_id: &WindowId, state: &ElementState) {
+        if !state.is_pressed() {
+            return;
+        }
+
+        self.double_click_context.push_time_now(window_id.clone());
+    }
+
     fn sync_drag(&self, drag_context: &DragContext) -> Result<(), String> {
         let Some(focus_window) = self.get_focused_window() else {
             return Err("Focus does not exist on any window".to_string());
@@ -295,6 +305,17 @@ impl AppUi for App {
         let target_coords = self.absolute_cursor_coords - drag_context.displacement;
 
         focus_window.set_outer_coordinates(&target_coords);
+
+        Ok(())
+    }
+
+    fn do_double_click(&mut self) -> Result<(), String> {
+        let Some(focus_window) = self.get_focused_window() else {
+            return Err("Focus does not exist on any window".to_string());
+        };
+
+        focus_window.reset_size();
+        self.double_click_context.reset_clicks();
 
         Ok(())
     }
@@ -349,20 +370,27 @@ impl ApplicationHandler for App {
                 let cursor_icon = self.get_cursor_icon();
                 focus_window.set_cursor_icon(cursor_icon);
 
-                let Some(drag_context) = &self.drag_context else {
-                    return;
-                };
-
-                let Err(msg) = self.sync_drag(drag_context) else {
-                    return;
-                };
-
-                eprintln!("Sync drag error: {}", msg);
+                if let Some(drag_context) = &self.drag_context {
+                    match self.sync_drag(drag_context) {
+                        Ok(_) => (),
+                        Err(msg) => {
+                            eprintln!("Sync drag error: {}", msg);
+                        }
+                    }
+                }
             }
 
             WindowEvent::MouseInput { state, .. } => {
                 self.ui_window_focus(&window_id, &state);
+
                 self.ui_update_drag_context(&window_id, &state);
+                self.ui_update_double_click_context(&window_id, &state);
+
+                if self.double_click_context.is_double_click() {
+                    if let Err(msg) = self.do_double_click() {
+                        eprintln!("Double click error: {}", msg);
+                    }
+                }
             }
 
             WindowEvent::KeyboardInput {

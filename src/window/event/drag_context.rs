@@ -1,5 +1,6 @@
-use crate::util::coordinates::Coordinates;
 use winit::window::WindowId;
+
+use crate::util::coordinates::Coordinates;
 
 pub struct DragContext {
     pub target_window_id: WindowId,

@@ -2,14 +2,14 @@ use glium::Texture2d;
 use winit::error::NotSupportedError;
 use winit::window::{CursorIcon, Window, WindowId};
 
-use std::error::Error;
-use std::path::PathBuf;
-
 use crate::gfx::render::render_image;
 use crate::settings::AppSettings;
 use crate::util::coordinates::Coordinates;
 use crate::window::image_data::ImageData;
 use crate::window::window_handle::WindowHandle;
+use std::error::Error;
+use std::path::PathBuf;
+use winit::dpi::PhysicalSize;
 
 pub struct ImageWindow {
     window_handle: WindowHandle,
@@ -81,6 +81,14 @@ impl ImageWindow {
         let outer_position = coordinates.to_physical();
 
         self.inner_window().set_outer_position(outer_position);
+    }
+
+    // TODO: Keep window center the same
+    pub fn reset_size(&self) {
+        let inner_window = self.inner_window();
+        let original_dim = self.image_data.meta.dimensions();
+
+        let _ = inner_window.request_inner_size(PhysicalSize::<u32>::from(original_dim));
     }
 }
 

@@ -145,7 +145,16 @@ impl App {
             event_loop.exit();
         }
 
-        // TODO: Refactor this => `self.remove_image_window(&self, window_id: WindowId)`
+        if let Err(msg) = self.remove_image_window(window_id) {
+            return Err(msg);
+        }
+
+        self.reset_focus();
+
+        Ok(())
+    }
+
+    fn remove_image_window(&mut self, window_id: WindowId) -> Result<(), String> {
         let Some(close_window_index) = self
             .image_windows
             .iter()
@@ -155,8 +164,6 @@ impl App {
         };
 
         self.image_windows.remove(close_window_index);
-
-        self.reset_focus();
 
         Ok(())
     }

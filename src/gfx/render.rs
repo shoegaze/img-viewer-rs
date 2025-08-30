@@ -19,30 +19,28 @@ pub fn render_image(
     let vertex_buffer = VertexBuffer::new(display, &SCREEN_VERTS).unwrap();
     let index_buffer = glium::index::NoIndices(TrianglesList);
 
-    {
-        let uniforms = &uniform! {
-            transform: [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0_f32],
-            ],
-            tex: texture,
-        };
+    let uniforms = &uniform! {
+        transform: [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0_f32],
+        ],
+        tex: texture,
+    };
 
-        let mut frame = display.draw();
+    let mut frame = display.draw();
 
-        frame.clear_color(0.0, 0.0, 0.0, 0.0);
-        frame.draw(
-            &vertex_buffer,
-            &index_buffer,
-            &program,
-            uniforms,
-            &Default::default(),
-        )?;
+    frame.clear_color(0.0, 0.0, 0.0, 0.0);
+    frame.draw(
+        &vertex_buffer,
+        &index_buffer,
+        &program,
+        uniforms,
+        &Default::default(),
+    )?;
 
-        frame.finish()?;
+    frame.finish()?;
 
-        Ok(())
-    }
+    Ok(())
 }

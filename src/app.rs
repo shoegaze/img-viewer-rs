@@ -18,7 +18,7 @@ use std::path::PathBuf;
 
 use crate::settings::AppSettings;
 use crate::ui::AppUi;
-use crate::util::coordinates::Coordinates;
+use crate::util::vec2::Vec2;
 use crate::util::window::{initial_window_attributes, window_title};
 use crate::window::event::double_click_context::DoubleClickContext;
 use crate::window::event::drag_context::DragContext;
@@ -36,7 +36,7 @@ pub struct App {
     images_queue: VecDeque<(DynamicImage, ImageData)>,
 
     // Event contexts
-    absolute_cursor_coords: Coordinates,
+    absolute_cursor_pos: Vec2,
     double_click_context: DoubleClickContext,
     drag_context: Option<DragContext>,
 }
@@ -246,14 +246,14 @@ impl AppUi for App {
             return;
         };
 
-        let Ok(window_outer_coords) = focus_window.get_outer_coordinates() else {
+        let Ok(window_outer_pos) = focus_window.get_outer_pos() else {
             return;
         };
 
-        let relative_cursor_coords = Coordinates::from(position);
-        let absolute_cursor_coords = window_outer_coords + relative_cursor_coords;
+        let relative_cursor_pos = Vec2::from(position);
+        let absolute_cursor_pos = window_outer_pos + relative_cursor_pos;
 
-        self.absolute_cursor_coords = absolute_cursor_coords;
+        self.absolute_cursor_pos = absolute_cursor_pos;
     }
 
     fn ui_update_drag_context(&mut self, window_id: &WindowId, state: &ElementState) {
@@ -261,7 +261,7 @@ impl AppUi for App {
             return;
         };
 
-        let Ok(target_coords) = focused_window.get_outer_coordinates() else {
+        let Ok(target_pos) = focused_window.get_outer_pos() else {
             return;
         };
 
@@ -269,7 +269,7 @@ impl AppUi for App {
             true => {
                 focused_window.set_cursor_icon(Grabbing);
 
-                let displacement = self.absolute_cursor_coords - target_coords;
+                let displacement = self.absolute_cursor_pos - target_pos;
                 let drag_context = DragContext::new(window_id.clone(), displacement);
 
                 Some(drag_context)
@@ -302,9 +302,9 @@ impl AppUi for App {
         }
 
         // position_target' = position_cursor' + displacement
-        let target_coords = self.absolute_cursor_coords - drag_context.displacement;
+        let target_pos = self.absolute_cursor_pos - drag_context.displacement;
 
-        focus_window.set_outer_coordinates(&target_coords);
+        focus_window.set_outer_pos(&target_pos);
 
         Ok(())
     }
@@ -314,7 +314,13 @@ impl AppUi for App {
             return Err("Focus does not exist on any window".to_string());
         };
 
-        focus_window.reset_size();
+        let reset_result = focus_window.reset_size();
+
+        // DEBUG
+        if let Err(err) = reset_result {
+            panic!("DEBUG: window reset size error: {}", err);
+        }
+
         self.double_click_context.reset_clicks();
 
         Ok(())
@@ -367,8 +373,11 @@ impl ApplicationHandler for App {
                     return;
                 };
 
-                let cursor_icon = self.get_cursor_icon();
-                focus_window.set_cursor_icon(cursor_icon);
+                {
+                    // Update cursor styles
+                    let cursor_icon = self.get_cursor_icon();
+                    focus_window.set_cursor_icon(cursor_icon);
+                }
 
                 if let Some(drag_context) = &self.drag_context {
                     match self.sync_drag(drag_context) {
@@ -382,8 +391,9 @@ impl ApplicationHandler for App {
 
             WindowEvent::MouseInput { state, .. } => {
                 self.ui_window_focus(&window_id, &state);
-
                 self.ui_update_drag_context(&window_id, &state);
+
+                // TODO: Prevent clicking after dragging counting as a double click
                 self.ui_update_double_click_context(&window_id, &state);
 
                 if self.double_click_context.is_double_click() {

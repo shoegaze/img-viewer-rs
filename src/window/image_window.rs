@@ -1,15 +1,16 @@
 use glium::Texture2d;
+use winit::dpi::PhysicalSize;
 use winit::error::NotSupportedError;
 use winit::window::{CursorIcon, Window, WindowId};
 
-use crate::gfx::render::render_image;
-use crate::settings::AppSettings;
-use crate::util::coordinates::Coordinates;
-use crate::window::image_data::ImageData;
-use crate::window::window_handle::WindowHandle;
 use std::error::Error;
 use std::path::PathBuf;
-use winit::dpi::PhysicalSize;
+
+use crate::gfx::render::render_image;
+use crate::settings::AppSettings;
+use crate::util::vec2::Vec2;
+use crate::window::image_data::ImageData;
+use crate::window::window_handle::WindowHandle;
 
 pub struct ImageWindow {
     window_handle: WindowHandle,
@@ -70,25 +71,38 @@ impl ImageWindow {
         self.inner_window().set_cursor(icon);
     }
 
-    pub fn get_outer_coordinates(&self) -> Result<Coordinates, NotSupportedError> {
+    pub fn get_outer_pos(&self) -> Result<Vec2, NotSupportedError> {
         let outer_position = self.inner_window().outer_position()?;
-        let outer_coordinates = Coordinates::from(&outer_position);
+        let outer_coordinates = Vec2::from(&outer_position);
 
         Ok(outer_coordinates)
     }
 
-    pub fn set_outer_coordinates(&self, coordinates: &Coordinates) {
-        let outer_position = coordinates.to_physical();
+    pub fn set_outer_pos(&self, coordinates: &Vec2) {
+        let outer_position = coordinates.to_physical_position();
 
         self.inner_window().set_outer_position(outer_position);
     }
 
-    // TODO: Keep window center the same
-    pub fn reset_size(&self) {
+    pub fn reset_size(&self) -> Result<(), Box<dyn Error>> {
         let inner_window = self.inner_window();
         let original_dim = self.image_data.meta.dimensions();
 
+        let original_outer_pos = inner_window.outer_position()?;
+        let original_outer_size = inner_window.outer_size();
+        let center_pos = Vec2::from(&original_outer_pos) + Vec2::from(&original_outer_size).half();
+
         let _ = inner_window.request_inner_size(PhysicalSize::<u32>::from(original_dim));
+
+        {
+            // Keep the window center the same as the previous size
+            let new_outer_size = inner_window.outer_size();
+            let new_outer_pos = center_pos - Vec2::from(&new_outer_size).half();
+
+            inner_window.set_outer_position(new_outer_pos.to_physical_position());
+        }
+
+        Ok(())
     }
 }
 

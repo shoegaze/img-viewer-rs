@@ -27,7 +27,7 @@ pub trait AppUi {
 
     fn ui_update_double_click_context(&mut self, window_id: &WindowId, state: &ElementState);
 
-    fn sync_drag(&self, drag_context: &DragContext) -> Result<(), String>;
+    fn sync_drag(&self, drag_context: &DragContext) -> Result<(), &'static str>;
 
-    fn do_double_click(&mut self) -> Result<(), String>;
+    fn do_double_click(&mut self) -> Result<(), &'static str>;
 }

@@ -135,9 +135,9 @@ impl App {
         &mut self,
         event_loop: &ActiveEventLoop,
         window_id: WindowId,
-    ) -> Result<(), String> {
+    ) -> Result<(), &'static str> {
         if self.image_windows.is_empty() {
-            return Err("No image windows to close".to_string());
+            return Err("No image windows to close");
         }
 
         // Quit application if the last image is closed
@@ -154,13 +154,13 @@ impl App {
         Ok(())
     }
 
-    fn remove_image_window(&mut self, window_id: WindowId) -> Result<(), String> {
+    fn remove_image_window(&mut self, window_id: WindowId) -> Result<(), &'static str> {
         let Some(close_window_index) = self
             .image_windows
             .iter()
             .position(|image_window| image_window.is_id(&window_id))
         else {
-            return Err("Window with the provided ID does not exist".to_string());
+            return Err("Window with the provided ID does not exist");
         };
 
         self.image_windows.remove(close_window_index);
@@ -298,14 +298,14 @@ impl AppUi for App {
         self.double_click_context.push_time_now(window_id.clone());
     }
 
-    fn sync_drag(&self, drag_context: &DragContext) -> Result<(), String> {
+    fn sync_drag(&self, drag_context: &DragContext) -> Result<(), &'static str> {
         let Some(focus_window) = self.get_focused_window() else {
-            return Err("Focus does not exist on any window".to_string());
+            return Err("Focus does not exist on any window");
         };
 
         // Check that the current window is the drag target
         if !focus_window.is_id(&drag_context.target_window_id) {
-            return Err("Focused window does not match target window ID".to_string());
+            return Err("Focused window does not match target window ID");
         }
 
         // position_target' = position_cursor' + displacement
@@ -316,9 +316,9 @@ impl AppUi for App {
         Ok(())
     }
 
-    fn do_double_click(&mut self) -> Result<(), String> {
+    fn do_double_click(&mut self) -> Result<(), &'static str> {
         let Some(focus_window) = self.get_focused_window() else {
-            return Err("Focus does not exist on any window".to_string());
+            return Err("Focus does not exist on any window");
         };
 
         let reset_result = focus_window.reset_size();

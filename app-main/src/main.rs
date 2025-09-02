@@ -1,5 +1,4 @@
 mod app;
-mod cli;
 mod gfx;
 mod settings;
 mod ui;
@@ -11,8 +10,9 @@ use winit::event_loop::{ControlFlow, EventLoop};
 
 use std::error::Error;
 
+use shared::cli::args::Args;
+
 use crate::app::App;
-use crate::cli::args::Args;
 use crate::settings::AppSettings;
 use crate::util::path::open_image_from_path;
 

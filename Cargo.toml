@@ -1,8 +1,11 @@
 [workspace]
 resolver = "3"
-members = ["app-main", "app-driver"]
+members = ["app-main", "app-driver", "shared"]
 default-members = ["app-main"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
+
+[workspace.dependencies]
+clap = { version = "4.5.45", features = ["derive"] }

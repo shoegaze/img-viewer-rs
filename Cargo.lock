@@ -141,6 +141,10 @@ checksum = "b0674a1ddeecb70197781e945de4b3b8ffb61fa939a5597bcf48503737663100"
 [[package]]
 name = "app-driver"
 version = "0.1.0"
+dependencies = [
+ "clap",
+ "shared",
+]
 
 [[package]]
 name = "app-main"
@@ -149,6 +153,7 @@ dependencies = [
  "clap",
  "glium",
  "image",
+ "shared",
  "winit",
 ]
 
@@ -1885,6 +1890,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf41e0cfaf7226dca15e8197172c295a782857fcb97fad1808a166870dee75a3"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "shared"
+version = "0.1.0"
+dependencies = [
+ "clap",
 ]
 
 [[package]]

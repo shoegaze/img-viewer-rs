@@ -8,7 +8,7 @@ use winit::application::ApplicationHandler;
 use winit::dpi::{PhysicalPosition, PhysicalSize};
 use winit::event::{ElementState, KeyEvent, WindowEvent};
 use winit::event_loop::ActiveEventLoop;
-use winit::keyboard::KeyCode::{Backspace, Delete, Tab};
+use winit::keyboard::KeyCode;
 use winit::window::CursorIcon::{Default, Grabbing};
 use winit::window::{CursorIcon, WindowId};
 
@@ -130,6 +130,22 @@ impl App {
             .find(|&image_window| image_window.is_id(window_id))
     }
 
+    /// Get the next window in the image window list
+    /// Cyclic, so calling on the last window ID will return the first window
+    fn get_next_window(&self, window_id: &WindowId) -> Option<&ImageWindow> {
+        let Some(window_index) = self
+            .image_windows
+            .iter()
+            .position(|image_window| image_window.is_id(window_id))
+        else {
+            return None;
+        };
+
+        let window_index = (window_index + 1) % self.image_windows.len();
+
+        self.image_windows.get(window_index)
+    }
+
     /// Close a window
     fn close_window(
         &mut self,
@@ -212,7 +228,7 @@ impl AppUi for App {
         }
     }
 
-    fn ui_poll_close(
+    fn ui_key_poll_close(
         &mut self,
         event: &KeyEvent,
         event_loop: &ActiveEventLoop,
@@ -221,22 +237,35 @@ impl AppUi for App {
         // TODO: Replace with event.logical_key
         let key = event.physical_key;
 
-        if key == Delete || key == Backspace {
+        if key == KeyCode::Delete || key == KeyCode::Backspace {
             let window_id = window_id.clone();
             let _ = self.close_window(event_loop, window_id);
         }
     }
 
-    fn ui_poll_toggle_decorations(&mut self, event: &KeyEvent, settings: &mut AppSettings) {
+    fn ui_key_poll_cycle_focus(&self, event: &KeyEvent, window_id: &WindowId) {
         // TODO: Replace with event.logical_key
         let key = event.physical_key;
 
-        if key == Tab {
+        if key == KeyCode::Tab {
+            let Some(next_window) = self.get_next_window(&window_id) else {
+                return;
+            };
+
+            next_window.focus();
+        }
+    }
+
+    fn ui_key_poll_toggle_decorations(&mut self, event: &KeyEvent, settings: &mut AppSettings) {
+        // TODO: Replace with event.logical_key
+        let key = event.physical_key;
+
+        if key == KeyCode::Digit1 {
             settings.toggle_show_title();
         }
     }
 
-    fn ui_window_focus(&self, window_id: &WindowId, state: &ElementState) {
+    fn ui_mouse_focus_window(&self, state: &ElementState, window_id: &WindowId) {
         if !state.is_pressed() {
             return;
         }
@@ -248,7 +277,7 @@ impl AppUi for App {
         image_window.focus();
     }
 
-    fn ui_update_cursor_context(&mut self, position: &PhysicalPosition<f64>) {
+    fn ui_mouse_update_cursor_context(&mut self, position: &PhysicalPosition<f64>) {
         let Some(focus_window) = self.get_focused_window() else {
             return;
         };
@@ -263,7 +292,7 @@ impl AppUi for App {
         self.absolute_cursor_pos = absolute_cursor_pos;
     }
 
-    fn ui_update_drag_context(&mut self, window_id: &WindowId, state: &ElementState) {
+    fn ui_mouse_update_drag_context(&mut self, state: &ElementState, window_id: &WindowId) {
         let Some(focused_window) = self.get_focused_window() else {
             return;
         };
@@ -290,7 +319,7 @@ impl AppUi for App {
         };
     }
 
-    fn ui_update_double_click_context(&mut self, window_id: &WindowId, state: &ElementState) {
+    fn ui_mouse_update_double_click_context(&mut self, state: &ElementState, window_id: &WindowId) {
         if !state.is_pressed() {
             return;
         }
@@ -374,7 +403,7 @@ impl ApplicationHandler for App {
             }
 
             WindowEvent::CursorMoved { position, .. } => {
-                self.ui_update_cursor_context(&position);
+                self.ui_mouse_update_cursor_context(&position);
 
                 let Some(focus_window) = self.get_focused_window() else {
                     return;
@@ -397,11 +426,11 @@ impl ApplicationHandler for App {
             }
 
             WindowEvent::MouseInput { state, .. } => {
-                self.ui_window_focus(&window_id, &state);
-                self.ui_update_drag_context(&window_id, &state);
+                self.ui_mouse_focus_window(&state, &window_id);
+                self.ui_mouse_update_drag_context(&state, &window_id);
 
                 // TODO: Prevent clicking after dragging counting as a double click
-                self.ui_update_double_click_context(&window_id, &state);
+                self.ui_mouse_update_double_click_context(&state, &window_id);
 
                 if self.double_click_context.is_double_click() {
                     if let Err(msg) = self.do_double_click() {
@@ -419,13 +448,14 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                self.ui_poll_close(&event, &event_loop, &window_id);
+                self.ui_key_poll_cycle_focus(&event, &window_id);
+                self.ui_key_poll_close(&event, &event_loop, &window_id);
 
                 {
                     // Poll settings changes
                     let mut updated_settings = self.settings.clone();
 
-                    self.ui_poll_toggle_decorations(&event, &mut updated_settings);
+                    self.ui_key_poll_toggle_decorations(&event, &mut updated_settings);
 
                     self.settings = updated_settings;
                 }

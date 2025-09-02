@@ -60,6 +60,7 @@ impl ImageWindow {
     }
 
     pub fn focus(&self) {
+        // TODO: Do focus indication animation
         self.inner_window().focus_window();
     }
 

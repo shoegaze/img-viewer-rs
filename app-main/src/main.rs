@@ -10,6 +10,7 @@ use winit::error::EventLoopError;
 use winit::event_loop::{ControlFlow, EventLoop};
 
 use std::error::Error;
+use std::process::exit;
 
 use shared::cli::args::Args;
 
@@ -18,7 +19,12 @@ use crate::settings::AppSettings;
 use crate::util::path::open_image_from_path;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let args = Args::parse().validated()?;
+    let args = Args::parse().validated();
+
+    if args.paths.is_empty() {
+        eprintln!("No valid images could be opened");
+        exit(1);
+    }
 
     // TODO: Load app settings from file
     let settings = AppSettings::default();
@@ -49,6 +55,5 @@ fn run_app(app: &mut App) -> Result<(), EventLoopError> {
     let event_loop = EventLoop::new()?;
 
     event_loop.set_control_flow(ControlFlow::Wait);
-
     event_loop.run_app(app)
 }

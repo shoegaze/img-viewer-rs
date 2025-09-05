@@ -350,12 +350,7 @@ impl AppUi for App {
             return Err("Focus does not exist on any window");
         };
 
-        let reset_result = focus_window.reset_size();
-
-        // DEBUG
-        if let Err(err) = reset_result {
-            panic!("DEBUG: window reset size error: {}", err);
-        }
+        let _ = focus_window.reset_size();
 
         self.double_click_context.reset_clicks();
 
@@ -422,7 +417,7 @@ impl ApplicationHandler for App {
                     match self.sync_drag(drag_context) {
                         Ok(_) => (),
                         Err(msg) => {
-                            eprintln!("Sync drag error: {}", msg);
+                            eprintln!("Sync drag error: {msg}");
                         }
                     }
                 }
@@ -437,7 +432,7 @@ impl ApplicationHandler for App {
 
                 if self.double_click_context.is_double_click() {
                     if let Err(msg) = self.do_double_click() {
-                        eprintln!("Double click error: {}", msg);
+                        eprintln!("Double click error: {msg}");
                     }
                 }
             }

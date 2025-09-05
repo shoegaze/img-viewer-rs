@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let open_image_result = open_image_from_path(&mut app, path);
 
         if let Err(error) = open_image_result {
-            eprintln!("Couldn't open image: '{}'", error);
+            eprintln!("Couldn't open image: '{error}'");
         };
     }
 
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let app_result = run_app(&mut app);
 
         if let Err(error) = app_result {
-            eprintln!("Event loop error occurred: {}", error);
+            eprintln!("Event loop error occurred: {error}");
 
             return Err(Box::from(error));
         }

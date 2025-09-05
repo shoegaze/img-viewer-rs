@@ -145,7 +145,6 @@ dependencies = [
  "clap",
  "glium",
  "image",
- "shared",
  "winit",
 ]
 
@@ -1882,13 +1881,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf41e0cfaf7226dca15e8197172c295a782857fcb97fad1808a166870dee75a3"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "shared"
-version = "0.1.0"
-dependencies = [
- "clap",
 ]
 
 [[package]]

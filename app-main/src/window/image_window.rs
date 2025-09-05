@@ -88,22 +88,35 @@ impl ImageWindow {
     pub fn reset_size(&self) -> Result<(), Box<dyn Error>> {
         let inner_window = self.inner_window();
         let original_dim = self.image_data.meta.dimensions();
+        let inner_size = PhysicalSize::<u32>::from(original_dim);
 
-        let original_outer_pos = inner_window.outer_position()?;
-        let original_outer_size = inner_window.outer_size();
-        let center_pos = Vec2::from(&original_outer_pos) + Vec2::from(&original_outer_size).half();
-
-        let _ = inner_window.request_inner_size(PhysicalSize::<u32>::from(original_dim));
+        let _ = inner_window.request_inner_size(inner_size);
 
         {
             // Keep the window center the same as the previous size
+            let original_outer_pos = inner_window.outer_position()?;
+            let original_outer_size = inner_window.outer_size();
+            let center_pos =
+                Vec2::from(&original_outer_pos) + Vec2::from(&original_outer_size).half();
+
             let new_outer_size = inner_window.outer_size();
             let new_outer_pos = center_pos - Vec2::from(&new_outer_size).half();
 
             inner_window.set_outer_position(new_outer_pos.to_physical_position());
         }
 
+        self.apply_size();
+
         Ok(())
+    }
+
+    pub fn apply_size(&self) {
+        let inner_window = self.inner_window();
+        let inner_size = inner_window.inner_size();
+        let inner_size = (inner_size.width, inner_size.height);
+
+        // Sync OpenGL surface size
+        self.window_handle.display.resize(inner_size);
     }
 }
 

@@ -397,6 +397,9 @@ impl ApplicationHandler for App {
                     return;
                 };
 
+                // TODO: refactor into focus_window.apply_transform();
+                focus_window.apply_size();
+
                 let _ = focus_window.render();
 
                 focus_window.request_redraw();

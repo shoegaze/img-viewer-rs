@@ -1,5 +1,7 @@
 # img-viewer.rs
 
+![Banner image](./banner.png)
+
 No-fluff image viewing application written in Rust
 
 ## Build and Execution

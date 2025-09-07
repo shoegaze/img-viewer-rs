@@ -21,10 +21,31 @@ impl From<&PhysicalPosition<f64>> for Vec2 {
     }
 }
 
+impl From<PhysicalPosition<f64>> for Vec2 {
+    fn from(value: PhysicalPosition<f64>) -> Self {
+        Vec2::from(&value)
+    }
+}
+
 impl From<&PhysicalPosition<i32>> for Vec2 {
     fn from(value: &PhysicalPosition<i32>) -> Self {
         let x = value.x as f64;
         let y = value.y as f64;
+
+        Vec2(x, y)
+    }
+}
+
+impl From<PhysicalPosition<i32>> for Vec2 {
+    fn from(value: PhysicalPosition<i32>) -> Self {
+        Vec2::from(&value)
+    }
+}
+
+impl From<(u32, u32)> for Vec2 {
+    fn from(value: (u32, u32)) -> Self {
+        let x = value.0 as f64;
+        let y = value.1 as f64;
 
         Vec2(x, y)
     }
@@ -36,6 +57,12 @@ impl From<&PhysicalSize<u32>> for Vec2 {
         let h = value.height as f64;
 
         Vec2(w, h)
+    }
+}
+
+impl From<PhysicalSize<u32>> for Vec2 {
+    fn from(value: PhysicalSize<u32>) -> Self {
+        Vec2::from(&value)
     }
 }
 

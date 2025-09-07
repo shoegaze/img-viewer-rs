@@ -6,7 +6,7 @@ use glium::{Display, Texture2d};
 use image::{DynamicImage, GenericImageView, ImageReader};
 use winit::application::ApplicationHandler;
 use winit::dpi::{PhysicalPosition, PhysicalSize};
-use winit::event::{ElementState, KeyEvent, WindowEvent};
+use winit::event::{ElementState, KeyEvent, MouseButton, WindowEvent};
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::KeyCode;
 use winit::window::CursorIcon::{Default, Grabbing};
@@ -423,12 +423,23 @@ impl ApplicationHandler for App {
                 }
             }
 
-            WindowEvent::MouseInput { state, .. } => {
-                self.ui_mouse_focus_window(&state, &window_id);
-                self.ui_mouse_update_drag_context(&state, &window_id);
+            WindowEvent::MouseInput { state, button, .. } => {
+                match button {
+                    MouseButton::Left => {
+                        self.ui_mouse_focus_window(&state, &window_id);
+                        self.ui_mouse_update_drag_context(&state, &window_id);
 
-                // TODO: Prevent clicking after dragging counting as a double click
-                self.ui_mouse_update_double_click_context(&state, &window_id);
+                        // TODO: Prevent clicking after dragging counting as a double click
+                        self.ui_mouse_update_double_click_context(&state, &window_id);
+                    }
+                    MouseButton::Right => {
+                        // Close window
+                        // TODO: Refactor into function
+                        let window_id = window_id.clone();
+                        let _ = self.close_window(event_loop, window_id);
+                    }
+                    _ => (),
+                }
 
                 if self.double_click_context.is_double_click() {
                     if let Err(msg) = self.do_double_click() {

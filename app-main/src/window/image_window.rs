@@ -42,6 +42,9 @@ impl ImageWindow {
     pub fn render(&self) -> Result<(), Box<dyn Error>> {
         render_image(&self.window_handle.display, &self.texture)?;
 
+        let inner_window = self.inner_window();
+        inner_window.pre_present_notify();
+
         Ok(())
     }
 
